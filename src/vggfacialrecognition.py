@@ -103,8 +103,8 @@ def main():
 
     # 8) Sauvegarde
     os.makedirs('models', exist_ok=True)
-    torch.save(model.state_dict(), 'models/vgg_face_recognition.pth')
-    print("Modèle sauvegardé sous 'models/vgg_face_recognition.pth'")
+    torch.save(model.state_dict(), 'models/models_trained/vgg_face_recognition.pth')
+    print("Modèle sauvegardé sous 'models/models_trained/vgg_face_recognition.pth'")
 
 
 if __name__ == '__main__':
