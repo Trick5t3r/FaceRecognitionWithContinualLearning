@@ -18,8 +18,8 @@ from models.recognition_model import FaceDataset
 # -------- Configuration --------
 data_dir      = 'data/train'
 num_classes   = 480
-batch_size    = 32
-num_epochs    = 10
+batch_size    = 64
+num_epochs    = 5
 learning_rate = 1e-4
 val_split     = 0.2
 seed          = 42
@@ -80,25 +80,35 @@ def main():
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
+        total_samples = 0
+        
         for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} — Train"):
+            if inputs is None:
+                continue
+                
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
-            loss    = criterion(outputs, labels)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-            running_loss += loss.item() * inputs.size(0)
+            running_loss += loss.detach().item() * inputs.size(0)
+            total_samples += inputs.size(0)
+            
         scheduler.step()
-        print(f"Epoch {epoch+1} — Train Loss: {running_loss/len(train_ds):.4f}")
+        print(f"Epoch {epoch+1} — Train Loss: {running_loss/total_samples:.4f}")
 
         model.eval()
         correct = total = 0
         with torch.no_grad():
             for inputs, labels in tqdm(val_loader, desc=f"Epoch {epoch+1}/{num_epochs} — Val"):
+                if inputs is None:
+                    continue
+                    
                 inputs, labels = inputs.to(device), labels.to(device)
                 preds = model(inputs).argmax(dim=1)
                 correct += (preds == labels).sum().item()
-                total   += labels.size(0)
+                total += labels.size(0)
         print(f"Epoch {epoch+1} — Val Acc: {correct/total:.4f}\n")
 
     # 8) Sauvegarde
